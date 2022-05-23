@@ -28,11 +28,57 @@ describe("Todos", () => {
     expect(additionalTask).toBeInTheDocument();
   });
 
-  // it("renders the todos after addition", () => {
-  //   render(<Todos />);
-  //   screen.debug();
+  it("should show a success message after adding a todo", async () => {
+    render(<Todos />);
 
-  //   const task4 = screen.getByText(/another task/i);
-  //   expect(task4).toBeInTheDocument();
-  // });
+    const todoInput = screen.getByLabelText(/todo:/i);
+    const submitButton = screen.getByRole("button", { name: /add/i });
+
+    await userEvent.type(todoInput, "another task");
+    await userEvent.click(submitButton);
+
+    const successMessage = screen.getByText(/todo was added/i);
+    expect(successMessage).toBeInTheDocument();
+  });
+
+  it("should reset the input field after adding a todo", async () => {
+    render(<Todos />);
+
+    const todoInput = screen.getByLabelText(/todo:/i);
+    const submitButton = screen.getByRole("button", { name: /add/i });
+
+    await userEvent.type(todoInput, "another task");
+    await userEvent.click(submitButton);
+
+    expect(todoInput.value).toBe("");
+  });
+
+  it("should call a given submit handler", async () => {
+    const submitFunction = jest.fn();
+
+    render(<Todos onSubmit={submitFunction} />);
+
+    const todoInput = screen.getByLabelText(/todo:/i);
+    const submitButton = screen.getByRole("button", { name: /add/i });
+
+    await userEvent.type(todoInput, "another task");
+    await userEvent.click(submitButton);
+
+    expect(submitFunction).toHaveBeenCalledTimes(1);
+    expect(submitFunction).toHaveBeenCalledWith("another task");
+  });
+
+  it("should not submit when the input field is empty", async () => {
+    const { container } = render(<Todos />);
+
+    const submitButton = screen.getByRole("button", { name: /add/i });
+
+    await userEvent.click(submitButton);
+
+    const successMessage = screen.queryByText(/todo was added/i);
+    expect(successMessage).not.toBeInTheDocument();
+
+    const invalidInput = container.querySelector("input:invalid");
+    expect(invalidInput).toBeInTheDocument();
+  });
 });
